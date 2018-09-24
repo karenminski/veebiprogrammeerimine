@@ -10,6 +10,8 @@
   if (isset($_POST["lastname"])){
  $lastName = $_POST["lastname"];
  }
+ $monthToday = date("m");
+ $monthNamesET = ["jaanuar","veebruar","märts","aprill","mai","juuni","juuli","august","september","oktoober","november","detsember"];
 ?>
 
 <!DOCTYPE html>
@@ -41,6 +43,20 @@
   <input type ="text" name="lastname">
   <label>Sünniaasta:</label>
   <input type="number" min="1914" max="2000" value="1999" name="birthyear">
+  <select name="birthmonth">
+  <?php
+
+	  for ($i = 1; $i <= 12; $i++) {
+	  if($i == $monthToday){
+      echo '<option value="' . $i . '" selected>' . $monthNamesET[$i - 1] . '</option>';
+}     
+      else {
+      echo '<option value="' . $i . '">' . $monthNamesET[$i - 1] . '</option>';
+}
+	  }
+
+?>
+ </select>
   <input type="submit" name="submitUserData" value="Saada andmed">
 </form>
 <hr>

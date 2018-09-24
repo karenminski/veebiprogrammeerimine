@@ -2,9 +2,15 @@
  //echo "See on minu esimene php!";
  $firstName = "Karen";
  $lastName = "Minski";
- $dateToday = date("d/m/y");
+ $dateToday = date("d");
+ $yearToday = date("Y");
  $weekdayToday = date("N");
+ $monthToday = date("m");
  $weekdayNamesET = ["esmaspäev","teisipäev","kolmapäev","neljapäev","reede","laupäev","pühapäev"];
+ $monthNamesET = ["jaanuar","veebruar","märts","aprill","mai","juuni","juuli","august","september","oktoober","november","detsember"];
+ //echo $monthToday;
+ //echo $monthNamesET[1];
+ //var_dump($monthNamesET);
  //echo $weekdayNamesET;
  //var_dump($weekdayNamesET);
  //echo $weekdayNamesET[1];
@@ -27,7 +33,6 @@
 	 $picNUM = mt_rand(2,43);
 	 //echo $picNUM;
 	 $picFILE = $picURL .$picNUM .$picEXT;
- 
  
 ?>
 
@@ -55,7 +60,7 @@
   
   <?php
   // echo "<p> Tänane kuupäev on: " .$dateToday .".</p> \n";
-  echo "<p>Täna on " .$weekdayNamesET[$weekdayToday - 1] .", " .$dateToday .". </p> \n";
+  echo "<p>Täna on " .$weekdayNamesET[$weekdayToday - 1] .", " .$dateToday ." " .$monthNamesET[$monthToday - 1] ." " .$yearToday .". </p> \n";
   echo "<p> Lehe avamise hetkel oli kell " .date("H:i:s") .", käes oli " .$partOfDay .".</p> \n";
   ?>
   <img src="<?php echo $picFILE; ?>" alt="TLÜ">

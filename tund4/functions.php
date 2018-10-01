@@ -48,4 +48,26 @@
   $data = htmlspecialchars($data);
   return $data;
  }
+ 
+ function addcat($catname, $catcolor, $cattaillength) {
+	$notice = ""; // Muutuja, kuhu lisatakse andmebaasi sisu
+	$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]); // Muutujad andmebaasi sisselogimiseks
+	// Sisesta kass
+	$stmt = $mysqli->prepare("INSERT INTO kiisu (nimi, v2rv, saba) VALUES(?, ?, ?)"); // Valmista ette SQL-käsk
+	echo $mysqli->error; // Vea korral teata sellest
+	$stmt->bind_param("ssi", $catname, $catcolor, $cattaillength); // Lisa muutujate sisu SQL-käsku
+	$stmt->close(); // sulge tabel 
+	
+	// Võta kassid välja
+	$stmt = $mysqli->prepare("SELECT nimi, v2rv, saba FROM kiisu ORDER BY kiisu_id");
+	echo $mysqli->error;
+	$stmt->bind_result($catname, $catcolor, $cattaillength);
+	$stmt->execute();
+	while($stmt->fetch()){
+		$notice .= "<li>" .$catname ." " .$catcolor ." " .$cattaillength ."</li> \n";
+	}
+	$stmt->close();
+	$mysqli->close();
+	return $notice;
+  }
 ?>

@@ -56,6 +56,7 @@
 	  }
 
 ?>
+
  </select>
   <input type="submit" name="submitUserData" value="Saada andmed">
 </form>

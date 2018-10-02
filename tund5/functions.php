@@ -1,6 +1,27 @@
 <?php
   require("../../../config.php");
   $database = "if18_karen_mi_1";
+  
+  function signup($firstName, $lastName, $birthDate, $gender, $email, $password){
+	$notice = "";
+	$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
+	$stmt = $mysqli->prepare("INSERT INTO vpusers (firstname, lastname, birthdate, gender, email, password) VALUES(?, ?, ?, ?, ?, ?)");
+	echo $mysqli->error;
+	// krüpteerime parooli
+	$options = ["cost"=>12, "salt"=>substr(sha1(mt_rand()), 0,22)]; // cost/krüpt aeg 12 max []massiivis eraldame komadega
+	$pwdhash = password_hash($password, PASSWORD_BCRYPT, $options);
+	$stmt->bind_param("sssiss", $firstName, $lastName, $birthDate, $gender, $email, $pwdhash);
+	if($stmt->execute()){
+		$notice = "Kasutaja loomine õnnestus";
+	} else {
+		$notice = "Kasutaja loomisel tekkis viga: " .$stmt->error;
+	}
+	$stmt->close();
+	$mysqli->close();
+	return $notice;
+  }
+  
+  
   function saveamsg($msg){
 	$notice = "";
 	//Loome andmebaasi ühenduse
@@ -56,7 +77,6 @@
 	$stmt = $mysqli->prepare("INSERT INTO kiisu (nimi, v2rv, saba) VALUES(?, ?, ?)"); // Valmista ette SQL-käsk
 	echo $mysqli->error; // Vea korral teata sellest
 	$stmt->bind_param("ssi", $catname, $catcolor, $cattaillength); // Lisa muutujate sisu SQL-käsku
-	$stmt->execute();
 	$stmt->close(); // sulge tabel 
 	
 	// Võta kassid välja

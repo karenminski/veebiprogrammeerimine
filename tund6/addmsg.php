@@ -30,6 +30,7 @@
   <input type="submit" name="submitMessage" value="Salvesta sõnum">
  </form>
  <hr>
+ <p><a href="index2.php">Tagasi</a> avalehele!</p>
  <p><?php echo $notice; ?></p>
  
 </body> 

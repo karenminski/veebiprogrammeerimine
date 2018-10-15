@@ -9,6 +9,66 @@
   
   //Valitud sõnumi valideerimiseks
   
+  function listusers(){
+	$notice = "";
+	$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
+	$stmt = $mysqli->prepare("SELECT firstname, lastname, email FROM vpusers WHERE id !=?");
+	//$stmt = $mysqli->prepare("SELECT firstname, lastname, email, description FROM vpusers3, vpuserprofiles WHERE vpuserprofiles.userid=vpusers.id");
+	
+	$mysqli->error;
+	$stmt->bind_param("i", $_SESSION["userId"]);
+	$stmt->bind_result($firstname, $lastname, $email);
+	//$stmt->bind_result($firstname, $lastname, $email, $description);
+	if($stmt->execute()){
+	  $notice .= "<ol> \n";
+	  while($stmt->fetch()){
+		  $notice .= "<li>" .$firstname ." " .$lastname .", kasutajatunnus: " .$email ."</li> \n";
+		  //$notice .= "<li>" .$firstname ." " .$lastname .", kasutajatunnus: " .$email ."<br>" .$description ."</li> \n";
+	  }
+	  $notice .= "</ol> \n";
+	} else {
+		$notice = "<p>Kasutajate nimekirja lugemisel tekkis tehniline viga! " .$stmt->error;
+	}
+	
+	$stmt->close();
+	$mysqli->close();
+	return $notice;
+  }
+  
+  function allvalidmessages(){
+	$html = "";
+	$valid = 1;
+	$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
+	$stmt = $mysqli->prepare("SELECT message FROM vpamsg WHERE valid=? ORDER BY validated DESC");
+	echo $mysqli->error;
+	$stmt->bind_param("i", $valid);
+	$stmt->bind_result($msg);
+	$stmt->execute();
+	while($stmt->fetch()){
+		$html .= "<p>" .$msg ."</p> \n";
+	}
+	$stmt->close();
+	$mysqli->close();
+	if(empty($html)){
+		$html = "<p>Kontrollitud sõnumeid pole.</p>";
+	}
+	return $html;
+  }
+function validatemsg($editId, $validation){
+	$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
+	$stmt = $mysqli->prepare("UPDATE vpamsg SET acceptedby=?, accepted=?, accepttime=now() WHERE id=?");
+	$stmt->bind_param("iii", $_SESSION["userId"], $validation, $editId);
+	if($stmt->execute()){
+	  echo "Õnnestus";
+	  header("Location: validatemsg.php");
+	  exit();
+	} else {
+	  echo "Tekkis viga: " .$stmt->error;
+	}
+	$stmt->close();
+	$mysqli->close();
+  }
+  
   function readmsgforvalidation($editId){
 	$notice = "";
 	$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
@@ -27,19 +87,15 @@
   //valideerimata sõnumite nimekiri
   function readallunvalidatedmessages(){
 	$notice = "<ul> \n";
-	$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]); 
-	$stmt = $mysqli->prepare("SELECT id, message FROM vpamsg WHERE accepted IS NULL");
-	  //SELECT id, message FROM vpamsg WHERE accepted IS NULL ORDER BY id DESC
+	$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
+	$stmt = $mysqli->prepare("SELECT id, message FROM vpamsg WHERE valid IS NULL ORDER BY id DESC");
 	echo $mysqli->error;
-	$stmt->bind_result($msgid, $msg);
-	if($stmt->execute()){
-		while($stmt->fetch()){
-			$notice .= "<li>" .$msg .'<br><a href="validatemessage.php?id=' .$msgid .'">Valideeri</a></li>' ."\n";
-		}
-	} else {
-		$notice .= "<li>Sõnumite lugemisel tekkis viga!" .$stmt->error ."</li> \n";
+	$stmt->bind_result($msgId, $msg);
+	$stmt->execute();
+	
+	while($stmt->fetch()){
+		$notice .= "<li>" .$msg .'<br><a href="validatemessage.php?id=' .$id .'">Valideeri</a>' ."</li> \n";
 	}
-	$notice .= "</ul> \n";
 	$stmt->close();
 	$mysqli->close();
 	return $notice;
@@ -62,8 +118,9 @@
 			 $notice="Olete õnnelikult sisse logitud";
 			 //määrame sessioonimuutujad
 			 $_SESSION["userId"] = $idFromDb;
-			 $_SESSION["FirstName"] = $firstnameFromDb;
-			 $_SESSION["LastName"] = $lastnameFromDb;
+		     $_SESSION["userFirstName"] = $firstnameFromDb;
+		     $_SESSION["userLastName"] = $lastnameFromDb;
+		     $_SESSION["userEmail"] = $email;
 			 $stmt->close();
 	         $mysqli->close();
 			 header("Location: main.php");

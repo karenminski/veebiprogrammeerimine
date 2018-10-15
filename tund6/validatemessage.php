@@ -1,18 +1,25 @@
 <?php
-  require("functions.php");
-  // kui pole sisse loginud
+    require("functions.php");
+  //kui pole sisse loginud
+  
+  //kui pole sisselogitud
   if(!isset($_SESSION["userId"])){
-	  header("Location: index2.php");
-	  exit();
+	header("Location: index_3.php");
+    exit();	
   }
-  //Välja logimine
-  if(isset ($_GET["logout"])){
-	  session_destroy(); 
-	  header("Location: index2.php");
-	  exit();
+  
+  //väljalogimine
+  if(isset($_GET["logout"])){
+	session_destroy();
+	header("Location:  index_3.php");
+	exit();
   }
-  if(isset($_GET ["id"])){
-  $msg = readmsgforvalidation($_GET ["id"]);  
+  
+  if(isset($_GET["id"])){
+	$msg = readmsgforvalidation($_GET["id"]);  
+  }
+  if(isset($_POST["submitValidation"])){
+	validatemsg(intval($_POST["id"]), intval($_POST["validation"]));
   }
 ?>
 <!DOCTYPE html>

@@ -25,12 +25,14 @@
 	<hr>
 	<p>Olete sisse loginud nimega: 
 	<?php
-	echo $_SESSION["FirstName"] ." " .$_SESSION["LastName"];
+	echo $_SESSION["userFirstName"] ." " .$_SESSION["userLastName"];
 	?>
 	</p>
 	<ul>
-	<li><a href="?logout=1">Logi välja</a></li>  
-	<li><a href="validatemsg.php">Valideeri anonüümseid sõnumeid</a></li>
+	<li><a href="?logout=1">Logi välja</a></li>
+	<li>Valideeri anonüümseid <a href="validatemsg.php">sõnumeid</a></li>
+	<li><a href="users.php">Süsteemi kasutajad</a>.</li>
+	<li><a href="validatedmessages.php">Valideeritud sõnumid kasutajate kaupa</a>.</li>
 	</ul>
 	
   </body>

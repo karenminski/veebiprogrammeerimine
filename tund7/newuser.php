@@ -168,6 +168,7 @@
   </form>
   <hr> <!-- Joon --> 
   <p><?php echo $notice; ?></p>
+   <p><a href="index2.php">Tagasi</a> avalehele!</p>
   
 </body>
 </html>

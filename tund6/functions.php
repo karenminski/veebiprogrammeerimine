@@ -1,14 +1,11 @@
 <?php
   require("../../../config.php");
   $database = "if18_karen_mi_1";
-  
   // Kasutan sessiooni 
   session_start();
   //SQL käsk andmete uuendamiseks
   //UPDATE vpamsg SET acceptedby=?, accepted=?, acceptedtime=now() WHERE id=?
-  
-  //Valitud sõnumi valideerimiseks
-  
+
   function listusers(){
 	$notice = "";
 	$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
@@ -35,24 +32,25 @@
 	return $notice;
   }
   
-  function allvalidmessages(){
-	$html = "";
-	$valid = 1;
-	$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
-	$stmt = $mysqli->prepare("SELECT message FROM vpamsg WHERE valid=? ORDER BY validated DESC");
-	echo $mysqli->error;
-	$stmt->bind_param("i", $valid);
-	$stmt->bind_result($msg);
-	$stmt->execute();
-	while($stmt->fetch()){
-		$html .= "<p>" .$msg ."</p> \n";
-	}
-	$stmt->close();
-	$mysqli->close();
-	if(empty($html)){
-		$html = "<p>Kontrollitud sõnumeid pole.</p>";
-	}
-	return $html;
+function allvalidmessages(){
+		$notice = "";
+		$accepted = 1;
+		$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
+		
+		$stmt = $mysqli->prepare("SELECT message FROM vpamsg WHERE accepted=? ORDER BY accepted DESC");
+		echo $mysqli -> error;
+		
+		$stmt->bind_param("i", $accepted);
+		$stmt->bind_result($msg);
+		$stmt->execute();
+		
+		while ($stmt -> fetch()){
+			$notice .= "<p>" . $msg . "</p> \n";
+		}
+		
+		$stmt->close();
+		$mysqli->close();
+	    return $notice;
   }
 function validatemsg($editId, $validation){
 	$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
@@ -86,20 +84,29 @@ function validatemsg($editId, $validation){
   
   //valideerimata sõnumite nimekiri
   function readallunvalidatedmessages(){
-	$notice = "<ul> \n";
-	$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
-	$stmt = $mysqli->prepare("SELECT id, message FROM vpamsg WHERE valid IS NULL ORDER BY id DESC");
-	echo $mysqli->error;
-	$stmt->bind_result($msgId, $msg);
-	$stmt->execute();
-	
-	while($stmt->fetch()){
-		$notice .= "<li>" .$msg .'<br><a href="validatemessage.php?id=' .$id .'">Valideeri</a>' ."</li> \n";
+		$notice = "<ul> \n";
+		$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
+		
+		$stmt = $mysqli -> prepare("SELECT id, message FROM vpamsg WHERE accepted IS NULL"); //sort: ORDER BY id DESC
+		echo $mysqli -> error;
+		$stmt -> bind_result($msgid, $msg);
+		
+		if ($stmt -> execute()){
+			while($stmt -> fetch()){
+				$notice .= "<li>" . $msg . '<br><a href = "validatemessage.php?id=' . $msgid . '" >Valideeri</a></li>' . "\n";
+			}
+		}
+		else {
+			$notice .= "<li>Sõnumite lugemisel tekkis viga: " . $stmt -> error . "</li> \n";
+		}
+		
+		$notice .= "</ul> \n";
+		
+		$stmt -> close();
+		$mysqli -> close();
+		
+		return $notice;
 	}
-	$stmt->close();
-	$mysqli->close();
-	return $notice;
-  }
   
   //sisselogimine
   function signin($email, $password){

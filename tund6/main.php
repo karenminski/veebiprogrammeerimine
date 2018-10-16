@@ -32,7 +32,6 @@
 	<li><a href="?logout=1">Logi välja</a></li>
 	<li>Valideeri anonüümseid <a href="validatemsg.php">sõnumeid</a></li>
 	<li><a href="users.php">Süsteemi kasutajad</a>.</li>
-	<li><a href="validatedmessages.php">Valideeritud sõnumid kasutajate kaupa</a>.</li>
 	</ul>
 	
   </body>

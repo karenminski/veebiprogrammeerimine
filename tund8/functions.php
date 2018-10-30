@@ -253,6 +253,7 @@ function validatemsg($editId, $validation){
 		     $_SESSION["userEmail"] = $email;
 			 $stmt->close();
 	         $mysqli->close();
+			 readprofilecolors();
 			 header("Location: main.php");
 			 exit();
 			 

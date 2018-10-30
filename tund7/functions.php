@@ -6,68 +6,128 @@
   //SQL käsk andmete uuendamiseks
 //Kõigi valideeritud sõnumite lugemine valideerija kaupa
 
- function readuserprofile(){
-	  $ruserprofile = "";
-	  $mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
-	  $stmt = $mysqli->prepare("SELECT userid, description, bgcolor, txtcolor FROM vpuserprofiles");
-	  echo $mysqli->error;
-	  $stmt->bind_result($useridFromDb, $descriptionFromDb, $bgcolorFromDb, $txtcolorFromDb);
-	  $stmt->execute();
-	  while($stmt->fetch()){
-		  $ruserprofile .= "<p>" .$descriptionFromDb ."</p> \n";  
-		  }
-	  $stmt->close();
+  function readprofilecolors(){
+	$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
+    $stmt = $mysqli->prepare("SELECT bgcolor, txtcolor FROM vpuserprofiles WHERE userid=?");
+	echo $mysqli->error;
+	$stmt->bind_param("i", $_SESSION["userId"]);
+	$stmt->bind_result($bgcolor, $txtcolor);
+	$stmt->execute();
+	$profile = new Stdclass();
+	if($stmt->fetch()){
+		$_SESSION["bgColor"] = $bgcolor;
+		$_SESSION["txtColor"] = $txtcolor;
+	} else {
+		$_SESSION["bgColor"] = "#FFFFFF";
+		$_SESSION["txtColor"] = "#000000";
+	}
+	$stmt->close();
 	$mysqli->close();
-	return $ruserprofile;
+  }
+  
+ function readuserprofile(){
+	$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
+    $stmt = $mysqli->prepare("SELECT description, bgcolor, txtcolor FROM vpuserprofiles WHERE userid=?");
+	echo $mysqli->error;
+	$stmt->bind_param("i", $_SESSION["userId"]);
+	$stmt->bind_result($description, $bgcolor, $txtcolor);
+	$stmt->execute();
+	$profile = new Stdclass();
+	if($stmt->fetch()){
+		$profile->description = $description;
+		$profile->bgcolor = $bgcolor;
+		$profile->txtcolor = $txtcolor;
+	} else {
+		$profile->description = "";
+		$profile->bgcolor = "";
+		$profile->txtcolor = "";
+	}
+	$stmt->close();
+	$mysqli->close();
+	return $profile;
   }
 
-  function createuserprofile($userid, $description, $bgcolor, $txtcolor){
+  function createuserprofile($desc, $bgcol, $txtcol){
 	$userprofile = "";
 	$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
-	$stmt = $mysqli->prepare("INSERT INTO vpuserprofiles (userid, description, bgcolor, txtcolor) VALUES(?,?,?,?)");
+    $stmt = $mysqli->prepare("SELECT description, bgcolor, txtcolor FROM vpuserprofiles WHERE userid=?");
 	echo $mysqli->error;
-	$stmt->bind_param("isss", $userid, $description, $bgcolor, $txtcolor);
-	if ($stmt->execute()){
-	 $userprofile = $description;	
-    } else {
-	  $userprofile = "Profiili salvestamisel tekkis viga" .$stmt->error;
-	}
+	$stmt->bind_param("i", $_SESSION["userId"]);
+	$stmt->bind_result($description, $bgcolor, $txtcolor);
+	$stmt->execute();
+	if($stmt->fetch()){
+		//profiil juba olemas, uuendame
+		$stmt->close();
+		$stmt = $mysqli->prepare("UPDATE vpuserprofiles SET description=?, bgcolor=?, txtcolor=? WHERE id=?");
+		echo $mysqli->error;
+		$stmt->bind_param("sssi", $desc, $bgcol, $txtcol, $_SESSION["userId"]);
+		if($stmt->execute()){
+			$userprofile = "Profiil edukalt uuendatud!";
+			$_SESSION["bgColor"] = $bgcol;
+		    $_SESSION["txtColor"] = $txtcol;
+		} else {
+			$userprofile = "Profiili uuendamisel tekkis tõrge! " .$stmt->error;
+		}
+	} else {
+		//profiili pole, salvestame
+		$stmt->close();
+		$stmt = $mysqli->prepare("INSERT INTO vpuserprofiles (userid, description, bgcolor, txtcolor) VALUES(?,?,?,?)");
+		echo $mysqli->error;
+		$stmt->bind_param("isss", $_SESSION["userId"], $desc, $bgcol, $txtcol);
+		if($stmt->execute()){
+			$userprofile = "Profiil edukalt salvestatud!";
+			$_SESSION["bgColor"] = $bgcol;
+		    $_SESSION["txtColor"] = $txtcol;
+		} else {
+			$userprofile = "Profiili salvestamisel tekkis tõrge! " .$stmt->error;
+		}
+	} 
 	$stmt->close();
 	$mysqli->close();
 	return $userprofile;
   }
 
   function readallvalidatedmessagesbyuser(){
-	  $msghtml = "";
-	  $notice = NULL;
-	  $mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
-	  $stmt = $mysqli->prepare("SELECT id, firstname, lastname FROM vpusers");
-	  echo $mysqli->error;
-	  $stmt->bind_result($idFromDb, $firstnameFromDb, $lastnameFromDb);
-	  $stmt2 = $mysqli->prepare("SELECT message, accepted FROM vpamsg WHERE acceptedby=?");
-	  $stmt2->bind_param("i", $idFromDb);
-	  $stmt2->bind_result($msgFromDb, $acceptedFromDb);
-	  $stmt->execute();
-	  //et saadud tulemus püsiks ja oleks kasutatav ka järgmises päringus(stmt2)
-	  $stmt->store_result();
-	  while($stmt->fetch()){
-		  $msghtml .= "<h3>" .$firstnameFromDb ." " .$lastnameFromDb ."</h3> \n";
-		  $stmt2->execute();
-		  while($stmt2->fetch()){
-			  $msghtml .="<p><b>";
-			  if($acceptedFromDb ==1){
-				  $msghtml .= "Lubatud: ";
-			  }  else {
-					  $msghtml .= "Keelatud: ";
-				  }
-				  $msghtml .= "</b>" .$msgFromDb ."</p> \n";
-		  }
-	  } 
-	  $stmt2->close();
-	  $stmt->close();
-	  $mysqli->close();
-	  return $msghtml;
-  }
+	$msghtml = "";
+	$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
+	$stmt = $mysqli->prepare("SELECT id, firstname, lastname FROM vpusers");
+	echo $mysqli->error;
+	$stmt->bind_result($idFromDb, $firstnameFromDb, $lastnameFromDb);
+	
+	$stmt2 = $mysqli->prepare("SELECT message, accepted FROM vpamsg WHERE acceptedby=?");
+	echo $mysqli->error;
+	$stmt2->bind_param("i", $idFromDb);
+	$stmt2->bind_result($messageFromDb, $acceptedFromDb);
+	
+	$stmt->execute();
+	$stmt->store_result();//jätab saadu pikemalt meelde, nii saab ka järgmine päring seda kasutada
+	
+	while ($stmt -> fetch()){
+			$userdata = "";
+			$userdata .= "<h3>" . $firstnameFromDb . " " . $lastnameFromDb . "</h3> \n";
+			$stmt2 -> execute();
+			$counter = 0;
+			while($stmt2 -> fetch()){
+				$counter++;
+				$userdata .= "<p><b>";
+				if ($acceptedFromDb == 1){
+					$userdata .= "Lubatud:";
+				}
+				else {
+					$userdata .= "Keelatud:";
+				}
+				$userdata .= "</b> " . $messageFromDb . "</p> \n";
+			}
+			if ($counter > 0){ // Add to HTML if the user did (in)validate messages
+				$msghtml .= $userdata;
+			}
+		}
+		$stmt2 -> close();
+		$stmt -> close();
+		$mysqli -> close();
+		
+		return $msghtml;
+	}
   
   function listusers(){
 	$notice = "";
@@ -100,7 +160,7 @@ function allvalidmessages(){
 		$accepted = 1;
 		$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
 		
-		$stmt = $mysqli->prepare("SELECT message FROM vpamsg WHERE accepted=? ORDER BY accepted DESC");
+		$stmt = $mysqli->prepare("SELECT message FROM vpamsg WHERE accepted=? ORDER BY accepttime DESC");
 		echo $mysqli -> error;
 		
 		$stmt->bind_param("i", $accepted);

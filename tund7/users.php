@@ -28,6 +28,12 @@
 		echo $_SESSION["userLastName"];
 	  ?>
 </title>
+	<style>
+	  <?php
+        echo "body{background-color: " .$_SESSION["bgColor"] ."; \n";
+		echo "color: " .$_SESSION["txtColor"] ."} \n";
+	  ?>
+	</style>
   </head>
   <body>
     <h1>

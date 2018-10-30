@@ -11,6 +11,18 @@
 	  header("Location: index2.php");
 	  exit();
   }
+  
+/*   $profiledetails = readuserprofile($_SESSION["userId"]);
+
+	if ($profiledetails != null){
+		if ($profiledetails[1] != null){
+			$_SESSION["txtcolor2"] = $profiledetails[1];
+		}
+		
+		if ($profiledetails[2] != null){
+			$_SESSION["bgcolor2"] = $profiledetails[2];
+		}
+	} */
 ?>
 
 <!DOCTYPE html>
@@ -18,6 +30,12 @@
   <head>
     <meta charset="utf-8">
 	<title>Pealeht</title>
+		<style>
+	  <?php
+        echo "body{background-color: " .$_SESSION["bgColor"] ."; \n";
+		echo "color: " .$_SESSION["txtColor"] ."} \n";
+	  ?>
+	</style>
   </head>
   <body>
     <h1>Pealeht</h1>

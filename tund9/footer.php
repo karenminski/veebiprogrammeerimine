@@ -1,7 +1,12 @@
 <!DOCTYPE html>
 <html>
     <footer>
-	<hr>
+	<style>
+	hr {
+	border-top: 2px dotted #FFFFFF;
+	border-bottom: none;
+}
+	</style>
 	<hr>
     <p>See leht on valminud <a href="https://www.tlu.ee" target="_blank">TLÜ </a> õppetöö raames ja ei oma mingisugust, mõtestatud või muul moel väärtuslikku sisu.</p>
 	<p>Olete sisse loginud nimega: 

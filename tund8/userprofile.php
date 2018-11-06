@@ -80,12 +80,6 @@
   <br>
   <input type="submit" name="submitProfile" value ="Salvesta profiil">
   </form>
-  <hr>
-  <ul>
-	<li><a href="?logout=1">Logi välja</a>!</li>
-	<li><a href="main.php">Tagasi</a> pealehele!</li>
-  </ul>
-  <hr>
-
+<?php require("footer.php"); ?>
 </body>
 </html>

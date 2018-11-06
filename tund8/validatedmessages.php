@@ -22,15 +22,9 @@ $msglist = readallvalidatedmessagesbyuser();
 <!DOCTYPE html>
 <html>
 <body>
-  <p>Siin on minu <a href="http://www.tlu.ee">TLÜ</a> õppetöö raames valminud veebilehed. Need ei oma mingit sügavat sisu ja nende kopeerimine ei oma mõtet.</p>
-  <hr>
-  <ul>
-	<li><a href="?logout=1">Logi välja</a>!</li>
-	<li><a href="main.php">Tagasi</a> pealehele!</li>
-  </ul>
-  <hr>
   <h2>Valideeritud sõnumid valideerijate kaupa</h2>
   <hr>
   <?php echo $msglist; ?>
+  <?php require("footer.php"); ?>
 </body>
 </html>

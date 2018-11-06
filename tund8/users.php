@@ -26,14 +26,7 @@
 	    echo $_SESSION["userFirstName"] ." " .$_SESSION["userLastName"];
 	  ?>
 	</h1>
-	<p>See leht on valminud <a href="http://www.tlu.ee" target="_blank">TLÜ</a> õppetöö raames ja ei oma mingisugust, mõtestatud või muul moel väärtuslikku sisu.</p>
-	<hr>
-	<ul>
-	  <li><a href="?logout=1">Logi välja</a>!</li>
-	  <li><a href="main.php">Tagasi pealehele</a></li>
-	</ul>
-	<hr>
 	<?php echo $userslist; ?>
-	
+	<?php require("footer.php"); ?>
   </body>
 </html>

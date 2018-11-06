@@ -40,7 +40,13 @@
 	  $txtcolor2 = $myprofile->txtcolor;
     }
   }
+  $userProfilePic = addUserProfilePic($filename);
   
+  	function resizeImage($image, $ow, $oh, $w, $h){
+		$newImage = imagecreatetruecolor($w, $h);
+		imagecopyresampled($newImage, $image, 0, 0, 0, 0, $w, $h, $ow, $oh);
+		return $newImage;
+	}
 ?>
 <!DOCTYPE html>
 <html>
@@ -65,8 +71,12 @@
 	  <?php
 	    echo $_SESSION["userFirstName"] ." " .$_SESSION["userLastName"];
 	  ?>
-	</h1>
-	<b>Kirjelda ennast</b>
+  </h1>
+  <label><b>Profiilipilt<b></label>
+  <img <?php echo $userProfilePic; ?> alt="Profiilipilt">
+  <input type="file" name="fileToUpload" id="fileToUpload"><br><br>
+  <?php echo $teade; ?>
+  <b>Kirjelda ennast</b>
   <form method ="POST" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>">
   <br>
   <textarea rows="10" cols="80" name="description"><?php echo $description2; ?></textarea>

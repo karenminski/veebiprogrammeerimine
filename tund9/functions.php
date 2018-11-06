@@ -5,6 +5,111 @@
   session_start();
   //SQL käsk andmete uuendamiseks
 //Kõigi valideeritud sõnumite lugemine valideerija kaupa
+  
+  function addUserProfilePic($filename){
+	$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
+    $stmt = $mysqli->prepare("INSERT INTO vpuserprofilepic (userid, filename) VALUES(?, ?)");
+	echo $mysqli->error;
+	$stmt->bind_param("is", $_SESSION["userId"], $filename);
+	/* if(!empty filename){
+		$myImage = ("../vp_picfiles/vp_user_generic.png");
+	else{
+		
+	}
+		
+	} */
+	if($stmt->execute()){
+		echo "Profiilipilt laeti edukalt üles";
+	}	else {
+			echo "Profiilipildi laadimisel läks midagi viltu" . $stmt->error;
+		} 
+	if(!empty($_FILES["fileToUpload"]["name"])){
+			
+			$imageFileType = strtolower(pathinfo(basename($_FILES["fileToUpload"]["name"]),PATHINFO_EXTENSION));
+			
+			$timeStamp = microtime(1) * 10000;
+			
+			$target_file_name = $_SESSION["userFirstName"] ."_" .$_SESSION["userLastName"] ."_" .$timeStamp ."." .$imageFileType;
+			$target_file = $target_dir .$target_file_name;
+			$check = getimagesize($_FILES["fileToUpload"]["tmp_name"]);
+			if($check !== false) {
+				$teade = "Fail on " . $check["mime"] . " pilt.";
+			} else {
+				$teade = "Fail ei ole pilt!";
+				$uploadOk = 0;
+			}
+			// Check if file already exists
+			if (file_exists($target_file)) {
+				$teade = "Vabandage, selline pilt on juba olemas!";
+				$uploadOk = 0;
+			}
+			// Check file size
+			if ($_FILES["fileToUpload"]["size"] > 2500000) {
+				$teade = "Vabandust, pilt on liiga suur!";
+				$uploadOk = 0;
+			}
+			// Allow certain file formats
+			if($imageFileType != "jpg" && $imageFileType != "png" && $imageFileType != "jpeg"
+			&& $imageFileType != "gif" ) {
+				$teade = "Vabandage, ainult JPG, JPEG, PNG ja GIF failid on lubatud!";
+				$uploadOk = 0;
+			}
+			// Check if $uploadOk is set to 0 by an error
+			if ($uploadOk == 0) {
+				$teade = "Kahjuks faili üles ei laeta!";
+			// if everything is ok, try to upload file
+			} else {
+				//loome vastavalt failitüübile pildiobjekti
+				if($imageFileType == "jpg" or $imageFileType == "jpeg"){
+					$myTempImage = imagecreatefromjpeg($_FILES["fileToUpload"]["tmp_name"]);
+				}
+				if($imageFileType == "png"){
+					$myTempImage = imagecreatefrompng($_FILES["fileToUpload"]["tmp_name"]);
+				}
+				if($imageFileType == "gif"){
+					$myTempImage = imagecreatefromgif($_FILES["fileToUpload"]["tmp_name"]);
+				}
+				$imageWidth = imagesx($myTempImage);
+				$imageHeight = imagesy($myTempImage);
+				//arvutan suuruse suhtarvu
+				if($imageWidth > $imageHeight){
+					$sizeRatio = $imageWidth / 300;
+				} else {
+					$sizeRatio = $imageHeight / 300;
+				}
+				$newWidth = round($imageWidth / $sizeRatio);
+				$newHeight = round($imageHeight / $sizeRatio);
+				$myImage = resizeImage($myTempImage, $imageWidth, $imageHeight, $newWidth, $newHeight);
+				//lähtudes failitüübist, kirjutan pildifaili
+				if($imageFileType == "jpg" or $imageFileType == "jpeg"){
+					if(imagejpeg($myImage, $target_file, 95)){
+						$teade =  "Fail " . basename( $_FILES["fileToUpload"]["name"]). " on edukalt üles laetud!";
+					} else {
+						$teade =  "Vabandage, faili ülelaadimisel tekkis tehniline viga!";
+					}
+				}
+				if($imageFileType == "png"){
+					if(imagepng($myImage, $target_file, 6)){
+						$teade =  "Fail " . basename( $_FILES["fileToUpload"]["name"]). " on edukalt üles laetud!";
+					} else {
+						$teade =  "Vabandage, faili ülelaadimisel tekkis tehniline viga!";
+					}
+				}
+				if($imageFileType == "gif"){
+					if(imagegif($myImage, $target_file)){
+						$teade =  "Fail " . basename( $_FILES["fileToUpload"]["name"]). " on edukalt üles laetud!";;
+					} else {
+						$teade =  "Vabandage, faili ülelaadimisel tekkis tehniline viga!";
+					}
+				}
+				imagedestroy($myTempImage);
+				imagedestroy($myImage);
+			}	
+		}
+	$stmt->close();
+	$mysqli->close();	
+	return $stmt;
+  }
 
   function addPhotoData($filename, $alttext, $privacy){
 	$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
@@ -15,7 +120,6 @@
 	}
 	$stmt->bind_param("issi", $_SESSION["userId"], $filename, $alttext, $privacy);
 	if($stmt->execute()){
-		echo "Andmebaasiga on kõik korras!";
 	}	else {
 			echo "Andmebaasiga läks midagi viltu" . $stmt->error;
 		}

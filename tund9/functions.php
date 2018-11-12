@@ -6,119 +6,31 @@
   //SQL käsk andmete uuendamiseks
 //Kõigi valideeritud sõnumite lugemine valideerija kaupa
   
-  function addUserProfilePic($filename){
+  function addUserProfilePic($fileName){
+	$addedId = null;
 	$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
-    $stmt = $mysqli->prepare("INSERT INTO vpuserprofilepic (userid, filename) VALUES(?, ?)");
+    $stmt = $mysqli->prepare("INSERT INTO vpuserprofilepic (userid, filename) VALUES (?, ?)");
 	echo $mysqli->error;
-	$stmt->bind_param("is", $_SESSION["userId"], $filename);
-	/* if(!empty filename){
-		$myImage = ("../vp_picfiles/vp_user_generic.png");
-	else{
-		
-	}
-		
-	} */
+	$stmt->bind_param("is", $_SESSION["userId"], $fileName);
 	if($stmt->execute()){
-		echo "Profiilipilt laeti edukalt üles";
-	}	else {
-			echo "Profiilipildi laadimisel läks midagi viltu" . $stmt->error;
-		} 
-	if(!empty($_FILES["fileToUpload"]["name"])){
-			
-			$imageFileType = strtolower(pathinfo(basename($_FILES["fileToUpload"]["name"]),PATHINFO_EXTENSION));
-			
-			$timeStamp = microtime(1) * 10000;
-			
-			$target_file_name = $_SESSION["userFirstName"] ."_" .$_SESSION["userLastName"] ."_" .$timeStamp ."." .$imageFileType;
-			$target_file = $target_dir .$target_file_name;
-			$check = getimagesize($_FILES["fileToUpload"]["tmp_name"]);
-			if($check !== false) {
-				$teade = "Fail on " . $check["mime"] . " pilt.";
-			} else {
-				$teade = "Fail ei ole pilt!";
-				$uploadOk = 0;
-			}
-			// Check if file already exists
-			if (file_exists($target_file)) {
-				$teade = "Vabandage, selline pilt on juba olemas!";
-				$uploadOk = 0;
-			}
-			// Check file size
-			if ($_FILES["fileToUpload"]["size"] > 2500000) {
-				$teade = "Vabandust, pilt on liiga suur!";
-				$uploadOk = 0;
-			}
-			// Allow certain file formats
-			if($imageFileType != "jpg" && $imageFileType != "png" && $imageFileType != "jpeg"
-			&& $imageFileType != "gif" ) {
-				$teade = "Vabandage, ainult JPG, JPEG, PNG ja GIF failid on lubatud!";
-				$uploadOk = 0;
-			}
-			// Check if $uploadOk is set to 0 by an error
-			if ($uploadOk == 0) {
-				$teade = "Kahjuks faili üles ei laeta!";
-			// if everything is ok, try to upload file
-			} else {
-				//loome vastavalt failitüübile pildiobjekti
-				if($imageFileType == "jpg" or $imageFileType == "jpeg"){
-					$myTempImage = imagecreatefromjpeg($_FILES["fileToUpload"]["tmp_name"]);
-				}
-				if($imageFileType == "png"){
-					$myTempImage = imagecreatefrompng($_FILES["fileToUpload"]["tmp_name"]);
-				}
-				if($imageFileType == "gif"){
-					$myTempImage = imagecreatefromgif($_FILES["fileToUpload"]["tmp_name"]);
-				}
-				$imageWidth = imagesx($myTempImage);
-				$imageHeight = imagesy($myTempImage);
-				//arvutan suuruse suhtarvu
-				if($imageWidth > $imageHeight){
-					$sizeRatio = $imageWidth / 300;
-				} else {
-					$sizeRatio = $imageHeight / 300;
-				}
-				$newWidth = round($imageWidth / $sizeRatio);
-				$newHeight = round($imageHeight / $sizeRatio);
-				$myImage = resizeImage($myTempImage, $imageWidth, $imageHeight, $newWidth, $newHeight);
-				//lähtudes failitüübist, kirjutan pildifaili
-				if($imageFileType == "jpg" or $imageFileType == "jpeg"){
-					if(imagejpeg($myImage, $target_file, 95)){
-						$teade =  "Fail " . basename( $_FILES["fileToUpload"]["name"]). " on edukalt üles laetud!";
-					} else {
-						$teade =  "Vabandage, faili ülelaadimisel tekkis tehniline viga!";
-					}
-				}
-				if($imageFileType == "png"){
-					if(imagepng($myImage, $target_file, 6)){
-						$teade =  "Fail " . basename( $_FILES["fileToUpload"]["name"]). " on edukalt üles laetud!";
-					} else {
-						$teade =  "Vabandage, faili ülelaadimisel tekkis tehniline viga!";
-					}
-				}
-				if($imageFileType == "gif"){
-					if(imagegif($myImage, $target_file)){
-						$teade =  "Fail " . basename( $_FILES["fileToUpload"]["name"]). " on edukalt üles laetud!";;
-					} else {
-						$teade =  "Vabandage, faili ülelaadimisel tekkis tehniline viga!";
-					}
-				}
-				imagedestroy($myTempImage);
-				imagedestroy($myImage);
-			}	
-		}
+	  $addedId = $mysqli->insert_id;
+	  //echo $addedId;
+	} else {
+	  echo $stmt->error;
+	}
+	return $addedId;
 	$stmt->close();
-	$mysqli->close();	
-	return $stmt;
+	$mysqli->close();
   }
 
-  function addPhotoData($filename, $alttext, $privacy){
+  function addPhotoData($fileName, $alt, $privacy){
 	$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
     $stmt = $mysqli->prepare("INSERT INTO vpphotos (userid, filename, alttext, privacy) VALUES(?, ?, ?, ?)");
 	echo $mysqli->error;
 	if(empty($privacy) or $privacy > 3 or $privacy < 1){
 		$privacy = 3;
 	}
-	$stmt->bind_param("issi", $_SESSION["userId"], $filename, $alttext, $privacy);
+	$stmt->bind_param("issi", $_SESSION["userId"], $fileName, $alt, $privacy);
 	if($stmt->execute()){
 	}	else {
 			echo "Andmebaasiga läks midagi viltu" . $stmt->error;
@@ -146,31 +58,8 @@
 	$stmt->close();
 	$mysqli->close();
   }
-  
- function readuserprofile(){
-	$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
-    $stmt = $mysqli->prepare("SELECT description, bgcolor, txtcolor FROM vpuserprofiles WHERE userid=?");
-	echo $mysqli->error;
-	$stmt->bind_param("i", $_SESSION["userId"]);
-	$stmt->bind_result($description, $bgcolor, $txtcolor);
-	$stmt->execute();
-	$profile = new Stdclass();
-	if($stmt->fetch()){
-		$profile->description = $description;
-		$profile->bgcolor = $bgcolor;
-		$profile->txtcolor = $txtcolor;
-	} else {
-		$profile->description = "";
-		$profile->bgcolor = "";
-		$profile->txtcolor = "";
-	}
-	$stmt->close();
-	$mysqli->close();
-	return $profile;
-  }
-
-  function createuserprofile($desc, $bgcol, $txtcol){
-	$userprofile = "";
+  function createuserprofile($desc, $bgcol, $txtcol, $picId){
+	$notice = "";
 	$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
     $stmt = $mysqli->prepare("SELECT description, bgcolor, txtcolor FROM vpuserprofiles WHERE userid=?");
 	echo $mysqli->error;
@@ -180,33 +69,84 @@
 	if($stmt->fetch()){
 		//profiil juba olemas, uuendame
 		$stmt->close();
-		$stmt = $mysqli->prepare("UPDATE vpuserprofiles SET description=?, bgcolor=?, txtcolor=? WHERE userid=?");
-		echo $mysqli->error;
-		$stmt->bind_param("sssi", $desc, $bgcol, $txtcol, $_SESSION["userId"]);
+		//kui on pilt lisatud
+		if(!empty($picId)){
+		  $stmt = $mysqli->prepare("UPDATE vpuserprofiles SET description=?, bgcolor=?, txtcolor=?, picture=? WHERE userid=?");
+		  echo $mysqli->error;
+		  $stmt->bind_param("sssii", $desc, $bgcol, $txtcol, $picId, $_SESSION["userId"]);
+		} else {
+		  $stmt = $mysqli->prepare("UPDATE vpuserprofiles SET description=?, bgcolor=?, txtcolor=? WHERE userid=?");
+		  echo $mysqli->error;
+		  $stmt->bind_param("sssi", $desc, $bgcol, $txtcol, $_SESSION["userId"]);
+		}
+		
 		if($stmt->execute()){
-			$userprofile = "Profiil edukalt uuendatud!";
+			$notice = "Profiil edukalt uuendatud!";
 			$_SESSION["bgColor"] = $bgcol;
 		    $_SESSION["txtColor"] = $txtcol;
 		} else {
-			$userprofile = "Profiili uuendamisel tekkis tõrge! " .$stmt->error;
+			$notice = "Profiili uuendamisel tekkis tõrge! " .$stmt->error;
 		}
 	} else {
 		//profiili pole, salvestame
 		$stmt->close();
-		$stmt = $mysqli->prepare("INSERT INTO vpuserprofiles (userid, description, bgcolor, txtcolor) VALUES(?,?,?,?)");
-		echo $mysqli->error;
-		$stmt->bind_param("isss", $_SESSION["userId"], $desc, $bgcol, $txtcol);
+		//kui on pilt ka lisatud
+		if(!empty($picId)){
+		  $stmt = $mysqli->prepare("INSERT INTO vpuserprofiles (userid, description, bgcolor, txtcolor, picture) VALUES(?,?,?,?,?)");
+		  echo $mysqli->error;
+		  $stmt->bind_param("isssi", $_SESSION["userId"], $desc, $bgcol, $txtcol, $picId);
+		} else {
+		  //INSERT INTO vpusers3 (firstname, lastname, birthdate, gender, email, password) VALUES(?,?,?,?,?,?)"
+		  $stmt = $mysqli->prepare("INSERT INTO vpuserprofiles (userid, description, bgcolor, txtcolor) VALUES(?,?,?,?)");
+		  echo $mysqli->error;
+		  $stmt->bind_param("isss", $_SESSION["userId"], $desc, $bgcol, $txtcol);
+		}
 		if($stmt->execute()){
-			$userprofile = "Profiil edukalt salvestatud!";
+			$notice = "Profiil edukalt salvestatud!";
 			$_SESSION["bgColor"] = $bgcol;
 		    $_SESSION["txtColor"] = $txtcol;
 		} else {
-			$userprofile = "Profiili salvestamisel tekkis tõrge! " .$stmt->error;
+			$notice = "Profiili salvestamisel tekkis tõrge! " .$stmt->error;
 		}
-	} 
+	}
 	$stmt->close();
 	$mysqli->close();
-	return $userprofile;
+	return $notice;
+  }
+  
+ function readuserprofile(){
+	$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
+    $stmt = $mysqli->prepare("SELECT description, bgcolor, txtcolor, picture FROM vpuserprofiles WHERE userid=?");
+	echo $mysqli->error;
+	$stmt->bind_param("i", $_SESSION["userId"]);
+	$stmt->bind_result($description, $bgcolor, $txtcolor, $picture);
+	$stmt->execute();
+	$profile = new Stdclass();
+	if($stmt->fetch()){
+		$profile->description = $description;
+		$profile->bgcolor = $bgcolor;
+		$profile->txtcolor = $txtcolor;
+		$profile->picture = $picture;
+	} else {
+		$profile->description = "";
+		$profile->bgcolor = "";
+		$profile->txtcolor = "";
+		$profile->picture = null;
+	}
+	$stmt->close();
+	if(!empty($profile->picture)){
+	  $stmt = $mysqli->prepare("SELECT filename FROM vpuserprofilepic WHERE id=?");
+	  echo $mysqli->error;
+	  $stmt->bind_param("i", $profile->picture);
+	  $stmt->bind_result($pictureFile);
+	  $stmt->execute();
+	  if($stmt->fetch()){
+		$profile->picture = $pictureFile;  
+	  }
+	  $stmt->close();
+	}
+	$mysqli->close();
+	return $profile;
   }
 
   function readallvalidatedmessagesbyuser(){

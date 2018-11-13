@@ -66,7 +66,7 @@
 		}
 		
 		public function saveFile($target_file){
-			$notice = null
+			$notice = null;
 			if($this->imageFileType == "jpg" or $this->imageFileType == "jpeg"){
 				if(imagejpeg($this->myImage, $target_file, 95)){
 					$notice = 1;

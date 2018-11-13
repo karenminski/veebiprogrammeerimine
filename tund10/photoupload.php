@@ -1,6 +1,6 @@
 <?php
   require("functions.php");
-  $teade = "";
+  $notice = "";
   // kui pole sisse loginud
   if(!isset($_SESSION["userId"])){
 	  header("Location: index2.php");
@@ -81,7 +81,7 @@
 				$saveSuccess = $myPhoto->saveFile($target_file);
 				unset($myPhoto);
 				
-			}	if($savesuccess == 1){
+			}	if($saveSuccess == 1){
 				addPhotoData($target_file_name, $_POST["altText"], $_POST["privacy"]);
 			} else {
 				echo "Vabandage, tekkis tehniline viga";

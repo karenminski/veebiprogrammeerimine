@@ -1,6 +1,6 @@
 <?php
   require("functions.php");
-  $notice = "";
+  require("classes/Photoupload.class.php");
   // kui pole sisse loginud
   if(!isset($_SESSION["userId"])){
 	  header("Location: index2.php");
@@ -13,7 +13,6 @@
 	  exit();
   }
   
-  require("classes/Photoupload.class.php");
   /* require("classes/Test.class.php");
   $myNumber = new Test(7);
   echo "Avalik arv on: " .$myNumber->publicNumber;
@@ -24,70 +23,71 @@
   unset($myNumber); */
   
   //Piltide üleslaadimise osa
+    $notice = "";
 	$target_dir = "../vppicuploads/";
-	
+	$thumb_dir = "../vpuser_picfiles/";
+	$thumbSize = 100;
+	$target_file = "";
 	$uploadOk = 1;
+	$imageNamePrefix = "vp_";
+    $textToImage = "Veebiprogrammeerimine";
+    $pathToWatermark = "../vp_picfiles/vp_logo_w100_overlay.png";
 	
 	// Check if image file is a actual image or fake image
 	if(isset($_POST["submitImage"])) {
 		if(!empty($_FILES["fileToUpload"]["name"])){
-			
-			$imageFileType = strtolower(pathinfo(basename($_FILES["fileToUpload"]["name"]),PATHINFO_EXTENSION));
-			
-			$timeStamp = microtime(1) * 10000;
-			
-			$target_file_name = "vp_" .$timeStamp ."." .$imageFileType;
-			
-			$target_file = $target_dir .$target_file_name;
-			//$target_file = $target_dir . basename($_FILES["fileToUpload"]["name"]);
-			//$imageFileType = strtolower(pathinfo($target_file,PATHINFO_EXTENSION));
-			
-			$check = getimagesize($_FILES["fileToUpload"]["tmp_name"]);
-			if($check !== false) {
-				$notice = "Fail on " . $check["mime"] . " pilt.";
-				//$uploadOk = 1;
+			$myPhoto = new Photoupload($_FILES["fileToUpload"]);
+			$myPhoto->readExif();
+			//echo $myPhoto->photoDate;
+			if(!empty($myPhoto->photoDate)){
+				$textToImage = $myPhoto->photoDate;
 			} else {
-				$notice = "Fail ei ole pilt!";
-				$uploadOk = 0;
+				$textToImage = "Pildistamise aeg teadmata";
+			}
+			$myPhoto->makeFileName($imageNamePrefix);
+			//määrame faili nime
+			$target_file = $target_dir .$myPhoto->fileName;
+			
+			//kas on pilt
+			$uploadOk = $myPhoto->checkForImage();
+			if($uploadOk == 1){
+			  // kas on sobiv tüüp
+			  $uploadOk = $myPhoto->checkForFileType();
 			}
 			
-			// Check if file already exists
-			if (file_exists($target_file)) {
-				$notice = "Vabandage, selline pilt on juba olemas!";
-				$uploadOk = 0;
-			}
-			// Check file size
-			if ($_FILES["fileToUpload"]["size"] > 2500000) {
-				$notice = "Vabandust, pilt on liiga suur!";
-				$uploadOk = 0;
+			if($uploadOk == 1){
+			  // kas on sobiv suurus
+			  $uploadOk = $myPhoto->checkForFileSize($_FILES["fileToUpload"], 2500000);
 			}
 			
-			// Allow certain file formats
-			if($imageFileType != "jpg" && $imageFileType != "png" && $imageFileType != "jpeg"
-			&& $imageFileType != "gif" ) {
-				$notice = "Vabandage, ainult JPG, JPEG, PNG ja GIF failid on lubatud!";
-				$uploadOk = 0;
+			if($uploadOk == 1){
+			  // kas on juba olemas
+			  $uploadOk = $myPhoto->checkIfExists($target_file);
 			}
-			// Check if $uploadOk is set to 0 by an error
+						
+			// kui on tekkinud viga
 			if ($uploadOk == 0) {
-				$notice = "Kahjuks faili üles ei laeta!";
-			// if everything is ok, try to upload file
+				$notice = "Vabandame, faili ei laetud üles! Tekkisid vead: ".$myPhoto->errorsForUpload;
+			// kui kõik korras, laeme üles
 			} else {
-				$myPhoto = new Photoupload($_FILES["fileToUpload"]["tmp_name"], $imageFileType);
-				$myPhoto->changePhotoSize(600, 400);
-				$myPhoto->addWatermark();
-				$myPhoto->addText();
-				$myPhoto->saveFile($target_file);
-				$saveSuccess = $myPhoto->saveFile($target_file);
-				unset($myPhoto);
 				
-			}	if($saveSuccess == 1){
-				addPhotoData($target_file_name, $_POST["altText"], $_POST["privacy"]);
-			} else {
-				echo "Vabandage, tekkis tehniline viga";
+				$myPhoto->resizeImage(600, 400);
+				$myPhoto->addWatermark($pathToWatermark);
+				$myPhoto->addText($textToImage);
+				$saveResult = $myPhoto->savePhoto($target_file);
+				//kui salvestus õnnestus, lisame andmebaasi
+				if($saveResult == 1){
+					$myPhoto->createThumbnail($thumb_dir, $thumbSize);
+					$notice = "Foto laeti üles! ";
+					$notice .= addPhotoData($myPhoto->fileName, $_POST["altText"], $_POST["privacy"]);
+				} else {
+					$notice .= "Foto lisamisel andmebaasi tekkis viga!";
+                }
+				
 			}
+			unset($myPhoto);
 		}
-	}//kontroll, kas vajutati nuppu
+	}
 	// Lehe päise laadimine
 	$pageTitle = "Piltide üleslaadimine";
 	require("header.php");

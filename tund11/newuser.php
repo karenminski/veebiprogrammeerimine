@@ -7,8 +7,8 @@
   $birthMonth = null;
   $birthYear = null;
   $birthDay = null;
-  $birthDate = "";
-  $gender = null;
+  $birthDate = null;
+  $gender = "";
   $email = "";
   
   $monthNamesET = ["jaanuar", "veebruar", "märts", "aprill", "mai", "juuni","juuli", "august", "september", "oktoober", "november", "detsember"];

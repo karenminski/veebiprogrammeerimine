@@ -50,6 +50,7 @@
 	<li>Vaata valideeritud <a href="validatedmessages.php">sõnumeid</a> kasutajate kaupa</li>
 	<li>Piltide <a href="photoupload.php">üleslaadimine</a></li>
 	<li>Avalike fotode <a href="pubgallery.php">galerii</a></li>
+	<li>Minu privaatsete fotode <a href="privgallery.php">galerii</a>.</li>
 	<li><a href="?logout=1">Logi välja</a></li>
 	</ul>
 	

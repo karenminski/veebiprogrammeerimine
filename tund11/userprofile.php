@@ -1,161 +1,89 @@
 <?php
-    require("functions.php");		
-  $description2 = "Pole tutvustust lisanud!";
-  $bgcolor2 = "#FFFFFF";
-  $txtcolor2 = "#000000";
-  $profilePic = "../vp_picfiles/vp_user_generic.png";
-  $profilePicDirectory = "../vpuser_picfiles/";
+    require("functions.php");	
+	require("classes/Photoupload.class.php");	
+ $notice = "";
+  
+  $mydescription = "Pole tutvustust lisanud!";
+  $mybgcolor = "#FFFFFF";
+  $mytxtcolor = "#000000";
+  $profilePic = "../vp_picfiles/vp_user_generic.png";//asendada reaalse pildi lugemisega
+  $profilePicId = NULL;
+  $picSize = 300;
+  $imageNamePrefix = "vpuser_";
+  //pildi üleslaadimise osa
+  //$profilePicDirectory = "../vpuser_picfiles/";
+  //Tuleb config failist: $profilePicDir
   $addedPhotoId = null;
-  $notice = "";
   
   $target_file = "";
   $uploadOk = 1;
-  $imageFileType = "";
+  //$imageFileType = "";
   
-  if(!isset($_SESSION["userId"])){
-	header("Location: index2.php");
-    exit();	
-  }
-
-  if(isset($_GET["logout"])){
-	session_destroy();
-	header("Location:  index2.php");
-	exit();
-  }
-
   if(isset($_POST["submitProfile"])){
-	//$notice = createuserprofile($_POST["description"], $_POST["bgcolor"], $_POST["txtcolor"]);
+	//$notice = storeuserprofile($_POST["description"], $_POST["bgcolor"], $_POST["txtcolor"]);
 	
 	//kohe uued väärtused näitamiseks kasutusele
 	if(!empty($_POST["description"])){
-	  $description2 = $_POST["description"];
+	  $mydescription = $_POST["description"];
 	}
-	$bgcolor2 = $_POST["bgcolor"];
-	$txtcolor2 = $_POST["txtcolor"];
+	$mybgcolor = $_POST["bgcolor"];
+	$mytxtcolor = $_POST["txtcolor"];
 	//profiilipildi laadimine
 	if(!empty($_FILES["fileToUpload"]["name"])){
-			$imageFileType = strtolower(pathinfo($_FILES["fileToUpload"]["name"], PATHINFO_EXTENSION));
-			$timeStamp = microtime(1) * 10000;
-			$target_file_name = "vpuserpic_" .$timeStamp ."." .$imageFileType;
-			$target_file = $profilePicDirectory .$target_file_name;
-						
-			// kas on pilt, kontrollin pildi suuruse küsimise kaudu
-			$check = getimagesize($_FILES["fileToUpload"]["tmp_name"]);
-			if($check !== false) {
-				//echo "Fail on pilt - " . $check["mime"] . ".";
-				$uploadOk = 1;
-			} else {
-			echo "Fail ei ole pilt.";
-				$uploadOk = 0;
-			}
-			
-			// faili suurus
-			if ($_FILES["fileToUpload"]["size"] > 2500000) {
-				echo "Kahjuks on fail liiga suur!";
-				$uploadOk = 0;
-			}
-			
-			// kindlad failitüübid
-			if($imageFileType != "jpg" && $imageFileType != "png" && $imageFileType != "jpeg"
-			&& $imageFileType != "gif" ) {
-				echo "Kahjuks on lubatud vaid JPG, JPEG, PNG ja GIF failid!";
-				$uploadOk = 0;
-			}
-			
+	  //foto laadimiseks kasutame klassi
+	  $myPhoto = new Photoupload($_FILES["fileToUpload"]);
+	  $myPhoto->makeFileName($imageNamePrefix);
+	  $target_file = $profilePicDir .$myPhoto->fileName;
+	  //kas on pilt
+		$uploadOk = $myPhoto->checkForImage();
+		if($uploadOk == 1){
+		  // kas on sobiv tüüp
+		  $uploadOk = $myPhoto->checkForFileType();
+		}
+		
+		if($uploadOk == 1){
+		  // kas on sobiv suurus
+		  $uploadOk = $myPhoto->checkForFileSize($_FILES["fileToUpload"], 2500000);
+		}
+		
+		if($uploadOk == 1){
+		  // kas on juba olemas
+		  $uploadOk = $myPhoto->checkIfExists($target_file);
+		}
+					
 			// kui on tekkinud viga
 			if ($uploadOk == 0) {
-				echo "Vabandame, faili ei laetud üles!";
-			// kui kõik korras, laeme üles
+				$notice = "Vabandame, profiilipildi faili ei laetud üles!";
+			
 			} else {
-				//sõltuvalt failitüübist, loome pildiobjekti
-				if($imageFileType == "jpg" or $imageFileType == "jpeg"){
-					$myTempImage = imagecreatefromjpeg($_FILES["fileToUpload"]["tmp_name"]);
-				}
-				if($imageFileType == "png"){
-					$myTempImage = imagecreatefrompng($_FILES["fileToUpload"]["tmp_name"]);
-				}
-				if($imageFileType == "gif"){
-					$myTempImage = imagecreatefromgif($_FILES["fileToUpload"]["tmp_name"]);
-				}
-				
-				//vaatame pildi originaalsuuruse
-				$imageWidth = imagesx($myTempImage);
-				$imageHeight = imagesy($myTempImage);
-				//leian vajaliku suurendusfaktori, siin arvestan, et lõikan ruuduks!!!
-				if($imageWidth > $imageHeight){
-					$sizeRatio = $imageHeight / 300;//ruuduks lõikamisel jagan vastupidi
-				} else {
-					$sizeRatio = $imageWidth / 300;
-				}
-				
-				$newWidth = round($imageWidth / $sizeRatio);
-				$newHeight = $newWidth;
-				$myImage = resizeImagetoSquare($myTempImage, $imageWidth, $imageHeight, $newWidth, $newHeight);
-				
-				//lisame vesimärgi
-				$waterMark = imagecreatefrompng("../vp_picfiles/vp_logo_w100_overlay.png");
-				$waterMarkWidth = imagesx($waterMark);
-				$waterMarkHeight = imagesy($waterMark);
-				$waterMarkPosX = $newWidth - $waterMarkWidth - 10;
-				$waterMarkPosY = $newHeight - $waterMarkHeight - 10;
-				//kopeerin vesimärgi pikslid pildile
-				imagecopy($myImage, $waterMark, $waterMarkPosX, $waterMarkPosY, 0, 0, $waterMarkWidth, $waterMarkHeight);
-				
-				//muudetud suurusega pilt kirjutatakse pildifailiks
-				if($imageFileType == "jpg" or $imageFileType == "jpeg"){
-				  if(imagejpeg($myImage, $target_file, 90)){
-                    //echo "Korras!";
-					//ja kohe see uus profiilipilt
-		            $profilePic = $target_file;
-					//kui pilt salvestati, siis lisame andmebaasi
-					$addedPhotoId = addUserProfilePic($target_file_name);
-					//echo "Lisatud pildi ID: " .$addedPhotoId;
-				  } else {
-					//echo "Pahasti!";
-				  }
-				}
-				
-				imagedestroy($myTempImage);
-				imagedestroy($myImage);
-				imagedestroy($waterMark);
-				
+				$saveSuccess = $myPhoto->createThumbnail($profilePicDir, $picSize);
+				$addedPhotoId = addUserPhotoData($myPhoto->fileName);
+				$profilePic = $target_file;
 			}
+		} else {
+		  $profilePic = $_POST["profilepic"];
 		}//pildi laadimine lõppes
 		//profiili salvestamine koos pildiga
-		$notice = createuserprofile($_POST["description"], $_POST["bgcolor"], $_POST["txtcolor"], $addedPhotoId);
+		$notice = storeuserprofile($_POST["description"], $_POST["bgcolor"], $_POST["txtcolor"], $addedPhotoId);
 		
 	
   } else {
-	$myprofile = readuserprofile();
+	$myprofile = showmyprofile();
 	if($myprofile->description != ""){
-	  $description2 = $myprofile->description;
+	  $mydescription = $myprofile->description;
     }
     if($myprofile->bgcolor != ""){
-	  $bgcolor2 = $myprofile->bgcolor;
+	  $mybgcolor = $myprofile->bgcolor;
     }
     if($myprofile->txtcolor != ""){
-	  $txtcolor2 = $myprofile->txtcolor;
+	  $mytxtcolor = $myprofile->txtcolor;
     }
 	if($myprofile->picture != ""){
-	  $profilePic = $profilePicDirectory .$myprofile->picture;
+	  $profilePic = $profilePicDir .$myprofile->picture;
 	}
+	
   }
-  
-  function resizeImageToSquare($image, $ow, $oh, $w, $h){
-	$newImage = imagecreatetruecolor($w, $h);
-	if($ow > $oh){
-		$cropX = round(($ow - $oh) / 2);
-		$cropY = 0;
-		$cropSize = $oh;
-	} else {
-		$cropX = 0;
-		$cropY = round(($oh - $ow) / 2);
-		$cropSize = $ow;
-	}
-    //imagecopyresampled($newImage, $image, 0, 0 , 0, 0, $w, $h, $ow, $oh);
-	imagecopyresampled($newImage, $image, 0, 0, $cropX, $cropY, $w, $h, $cropSize, $cropSize); 
-	return $newImage;
-  }
+ 
   
   	$pageTitle = "Kasutajaprofiil";
 	require("header.php");
@@ -185,20 +113,21 @@
 	  <img src="<?php echo $profilePic; ?>" 
 	  alt="<?php echo $_SESSION["userFirstName"] ." " .$_SESSION["userLastName"]; ?>">
    </div> 
+    <input type="hidden" name="profilepic" value="<?php echo $profilePic; ?>">
   <br>
   <br>
   <label>Minu kirjeldus</label><br>  <br>
-  <textarea rows="10" cols="80" name="description"><?php echo $description2; ?></textarea>
+  <textarea rows="10" cols="80" name="description"><?php echo $mydescription; ?></textarea>
   <br>
   <br>
   <br>
   <br>
   <br>
   <br>
-  <label>Minu valitud taustavärv: </label><input name="bgcolor" type="color" value="<?php echo $bgcolor2; ?>">
+  <label>Minu valitud taustavärv: </label><input name="bgcolor" type="color" value="<?php echo $mybgcolor; ?>">
   <br>
   <br>
-  <label>Minu valitud tekstivärv: </label><input name="txtcolor" type="color" value="<?php echo $txtcolor2; ?>">
+  <label>Minu valitud tekstivärv: </label><input name="txtcolor" type="color" value="<?php echo $mytxtcolor; ?>">
   <br>
   <br>
   <label>Vali üleslaetav profiilipilt: </label>

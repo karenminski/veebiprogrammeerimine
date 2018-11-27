@@ -13,9 +13,10 @@
 	exit();
   }
   $page = 1;
-  $totalImages = findTotalPublicImages();
+  $totalImages = findTotalPrivateImages();
   //echo $totalImages;
   $limit = 10;
+  
   if(!isset($_GET["page"]) or $_GET["page"] < 1){
 	  $page = 1;
   } elseif (round(($_GET["page"] - 1) * $limit) > $totalImages){
@@ -24,11 +25,11 @@
 	  $page = $_GET["page"];
   }
   //$publicThumbnails = readAllPublicPictureThumbs();
-  $publicThumbnails = readAllPublicPictureThumbsPage($page, $limit);
+  $privateThumbnails = readAllPrivatePictureThumbsPage($page, $limit);
   
   //$userslist = listusers();
   //$thumbs = allPublicPictureThumbsPage(2);
-  $pageTitle = "Avalikud pildid";
+  $pageTitle = "Privaatsed pildid";
   require("header.php");
 ?>
 
@@ -53,7 +54,7 @@
 			echo "| <span>Järgmised pildid</span>";
 		}
 		echo "</p> \n";
-		echo $publicThumbnails;
+		echo $privateThumbnails;
 	?>
 	<?php require("footer.php"); ?>
   </body>

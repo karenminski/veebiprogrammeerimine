@@ -28,7 +28,7 @@
 	//$target_dir = "../vppicuploads/";
 	$target_dir = $picDir;
 	//$thumb_dir = "../vp_thumb_uploads/";
-	//$thumb_dir = $thumbDir;
+	$thumb_dir = $thumbDir;
 	$thumbSize = 100;
 	$targetFile = "";
 	$uploadOk = 1;
@@ -38,7 +38,11 @@
 	
 	// Check if image file is a actual image or fake image
 	if(isset($_POST["submitImage"])) {
+		//var_dump($_POST);
+		//var_dump($_FILES);
+		//kas failinimi ka olemas on
 		if(!empty($_FILES["fileToUpload"]["name"])){
+		
 			$myPhoto = new Photoupload($_FILES["fileToUpload"]);
 			$myPhoto->readExif();
 			//echo $myPhoto->photoDate;
@@ -49,7 +53,7 @@
 			}
 			$myPhoto->makeFileName($imageNamePrefix);
 			//määrame faili nime
-			$targetFile = $target_dir .$myPhoto->fileName;
+			$target_file = $target_dir .$myPhoto->fileName;
 			
 			//kas on pilt
 			$uploadOk = $myPhoto->checkForImage();
@@ -65,7 +69,7 @@
 			
 			if($uploadOk == 1){
 			  // kas on juba olemas
-			  $uploadOk = $myPhoto->checkIfExists($targetFile);
+			  $uploadOk = $myPhoto->checkIfExists($target_file);
 			}
 						
 			// kui on tekkinud viga
@@ -73,22 +77,23 @@
 				$notice = "Vabandame, faili ei laetud üles! Tekkisid vead: ".$myPhoto->errorsForUpload;
 			// kui kõik korras, laeme üles
 			} else {
+				
 				$myPhoto->resizeImage(600, 400);
 				$myPhoto->addWatermark($pathToWatermark);
-				$myPhoto->addText($textToImage);
-				$saveResult = $myPhoto->savePhoto($targetFile);
+				$myPhoto->addText($textToImage, 20, 25);
+				$saveResult = $myPhoto->savePhoto($target_file);
 				//kui salvestus õnnestus, lisame andmebaasi
 				if($saveResult == 1){
-					$myPhoto->createThumbnail($thumbDir, $thumbSize);
-					$notice = "Foto laeti üles! ";
-					$notice .= addPhotoData($myPhoto->fileName, $_POST["altText"], $_POST["privacy"]);
+				  $myPhoto->createThumbnail($thumb_dir, $thumbSize);
+                  $notice = "Foto laeti üles! ";
+				  $notice .= addPhotoData($myPhoto->fileName, $_POST["altText"], $_POST["privacy"]);
 				} else {
-					$notice .= "Foto lisamisel andmebaasi tekkis viga!";
+                  $notice .= "Foto lisamisel andmebaasi tekkis viga!";
                 }
 				
 			}
 			unset($myPhoto);
-		}
+		}//ega failinimi tühi pole
 	}
 	// Lehe päise laadimine
 	$pageTitle = "Piltide üleslaadimine";
@@ -108,8 +113,7 @@
 	<input type="radio" name="privacy" value="1"><label>Avalik</Label><br>
 	<input type="radio" name="privacy" value="2"><label>Sisseloginud kasutajatele</Label><br>
 	<input type="radio" name="privacy" value="3" checked><label>Privaatne</Label><br><br>
-    <input type="submit" value="Lae pilt üles" name="submitImage">
-	<?php echo $notice;?>
+    <input id="submitImage" type="submit" value="Lae pilt üles" name="submitImage"><span><?php echo $notice; ?></span>
 </form>
 <br>
 <?php require("footer.php"); ?>

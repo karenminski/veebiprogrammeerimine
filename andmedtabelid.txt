@@ -13,3 +13,7 @@ Kasutajaprofiilid
 Üleslaetavad fotod
 
 CREATE TABLE `if18_karen_mi_1`.`vpphotos` ( `id` INT(15) NOT NULL AUTO_INCREMENT , `userid` INT(11) NOT NULL , `filename` VARCHAR(40) NOT NULL , `alttext` VARCHAR(256) NULL , `privacy` INT(1) NOT NULL , `created` DATE NOT NULL DEFAULT CURRENT_TIMESTAMP , `deleted` DATE NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;
+
+Ratingud
+
+CREATE TABLE `if18_karen_mi_1`.`vpphotoratings` ( `id` INT(11) NOT NULL AUTO_INCREMENT , `photoid` INT(11) NOT NULL , `userid` INT(11) NOT NULL , `rating` INT(1) NOT NULL , `added` DATE NOT NULL DEFAULT CURRENT_TIMESTAMP , PRIMARY KEY (`id`)) ENGINE = InnoDB;

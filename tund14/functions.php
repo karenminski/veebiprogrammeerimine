@@ -8,7 +8,8 @@
 
   //SQL käsk, mis väljastab arvu...
   //   SELECT COUNT(*) FROM vpphotos2 WHERE deleted IS null ...
-  
+
+ 
   
 	function readnews($expire){
 	$notice = "";
@@ -341,18 +342,16 @@
 	return $profile;
   }
 
-  function readallvalidatedmessagesbyuser(){
+ function readallvalidatedmessagesbyuser(){
 	$msghtml = "";
 	$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
 	$stmt = $mysqli->prepare("SELECT id, firstname, lastname FROM vpusers");
 	echo $mysqli->error;
 	$stmt->bind_result($idFromDb, $firstnameFromDb, $lastnameFromDb);
-	
 	$stmt2 = $mysqli->prepare("SELECT message, accepted FROM vpamsg WHERE acceptedby=?");
 	echo $mysqli->error;
 	$stmt2->bind_param("i", $idFromDb);
 	$stmt2->bind_result($messageFromDb, $acceptedFromDb);
-	
 	$stmt->execute();
 	$stmt->store_result();//jätab saadu pikemalt meelde, nii saab ka järgmine päring seda kasutada
 	
